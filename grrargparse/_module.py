@@ -3,7 +3,6 @@ from .grr_logging import log
 import abc
 from ._grrargparse_helpers import query_yes_no, capture_file, capture_text, get_persistence_store
 
-
 class InteractiveOption(object):
 
     YN = 0
@@ -79,6 +78,7 @@ class APIModule(object):
 
 
     def add_single_file_option(self, letter, word, question, var_name, help, must_exist=False, must_not_exist=False, default_file=None, interactive_mode=INTERACTIVE_ALWAYS):
+
         self.subparser.add_argument("-"+letter, "--"+word, dest=var_name,help=help,required=False)
 
         if self.ask_interactively(interactive_mode, var_name):
@@ -135,7 +135,7 @@ class APIModule(object):
             assert isinstance(l, InteractiveOption)
 
             # only process if args doesn't already have the key
-            if l.var_name not in self.args:
+            if l.var_name+"_global" not in self.args.keys():
 
 
                 ######## YN OPTION ###########
@@ -224,7 +224,9 @@ class APIModule(object):
 
 
     def get_var(self, name):
-        if name in self.args:
+        if name+"_global" in self.args:
+            return self.args[name+"_global"]
+        elif name in self.args:
             return self.args[name]
         else:
             log("Got a key error when trying to retrieve: " + name + " from args: " + str(

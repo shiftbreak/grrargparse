@@ -5,6 +5,7 @@ import os
 from ._grrargparse_helpers import j
 from ._module import APIModule
 from .grr_logging import Logger,log, set_debugging
+
 # end imports
 
 # Global instance of grrargparse
@@ -39,17 +40,22 @@ class grrargparse(object):
         self.parser = argparse.ArgumentParser()
 
         # add global args
-        self.parser.add_argument('-d',"--debug",action="store_true", dest="debug", help="Enable Debugging", required=False)
+        self.parser.add_argument('-X',"--debug",action="store_true", dest="debug", help="Enable Debugging", required=False)
         self.subp = self.parser.add_subparsers(help="Available Commands", dest="cmd")
 
     def add_global_argument(self, *args, **kwargs):
-        self.parser.add_argument(*args,**kwargs)
+
+        #add global tag on args to make sure it isn't overwritten by module arg
+        kwargs['dest'] = kwargs['dest']+"_global"
+        self.parser.add_argument(*args, **kwargs)
 
     def _parse(self):
 
         a = vars(self.parser.parse_args())
         for l in list(a.keys()):
+
             val = a.get(l)
+
             if val is not None:
                 self.args[l] = val
 
