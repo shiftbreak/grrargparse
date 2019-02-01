@@ -3,7 +3,7 @@ from .grr_logging import log
 import abc
 from ._grrargparse_helpers import query_yes_no, capture_file, capture_text, get_persistence_store
 
-class InteractiveOption(object):
+class GrrArgument(object):
 
     YN = 0
     YN_FILE = 1
@@ -17,7 +17,7 @@ class InteractiveOption(object):
 
 
 
-    def __init__(self, type, question, var_name, default_yn="Yes", must_exist=False, must_not_exist=False, default_string=None, ask_for_titles=False):
+    def __init__(self, type, question, var_name, default_yn="Yes", must_exist=False, must_not_exist=False, default_string=None, ask_for_titles=False, mode=102):
 
         self.type = type
 
@@ -28,6 +28,17 @@ class InteractiveOption(object):
         self.must_not_exist = must_not_exist
         self.default_string = default_string
         self.ask_for_titles = ask_for_titles
+        self.mode = mode
+
+    def ask_interactively(self, args):
+        if (self.mode == 102):
+            return False
+        if (self.mode == 101):
+            return True
+        if (self.var_name not in args and self.mode == 103):
+            return True
+
+        return False
 
 
 class APIModule(object):
@@ -65,33 +76,29 @@ class APIModule(object):
             act = "store_true"
         self.subparser.add_argument("-"+letter, "--"+word, action=act, dest=var_name,help=help,required=False)
 
-        if self.ask_interactively(interactive_mode, var_name):
-            n = InteractiveOption(InteractiveOption.YN,question,var_name,default_yn = default_yn)
-            self.steps.append(n)
+        n = GrrArgument(GrrArgument.YN,question,var_name,default_yn = default_yn, mode=interactive_mode)
+        self.steps.append(n)
 
     def add_yn_file_option(self, letter,word,question, var_name, help, default_yn=DEFAULT_Y, default_file=None, interactive_mode=INTERACTIVE_ALWAYS):
         self.subparser.add_argument("-"+letter, "--"+word, dest=var_name,metavar="<"+var_name+">",help=help,required=False)
 
-        if self.ask_interactively(interactive_mode, var_name):
-            n = InteractiveOption(InteractiveOption.YN_FILE,question,var_name,default_yn = default_yn, default_string = default_file)
-            self.steps.append(n)
+        n = GrrArgument(GrrArgument.YN_FILE,question,var_name,default_yn = default_yn, default_string = default_file, mode=interactive_mode)
+        self.steps.append(n)
 
 
     def add_single_file_option(self, letter, word, question, var_name, help, must_exist=False, must_not_exist=False, default_file=None, interactive_mode=INTERACTIVE_ALWAYS):
 
         self.subparser.add_argument("-"+letter, "--"+word, dest=var_name,help=help,required=False)
 
-        if self.ask_interactively(interactive_mode, var_name):
-            n = InteractiveOption(InteractiveOption.FILE,question,var_name,must_exist=must_exist,must_not_exist=must_not_exist, default_string = default_file)
-            self.steps.append(n)
+        n = GrrArgument(GrrArgument.FILE,question,var_name,must_exist=must_exist,must_not_exist=must_not_exist, default_string = default_file, mode=interactive_mode)
+        self.steps.append(n)
 
 
     def add_folder_option(self, letter, word, question, var_name, help, must_exist=False, must_not_exist=False, default_folder=None, interactive_mode=INTERACTIVE_ALWAYS):
         self.subparser.add_argument("-"+letter, "--"+word, dest=var_name,help=help, required=False)
 
-        if self.ask_interactively(interactive_mode, var_name):
-            n = InteractiveOption(InteractiveOption.FOLDER, question, var_name, must_exist=must_exist, must_not_exist=must_not_exist, default_string = default_folder)
-            self.steps.append(n)
+        n = GrrArgument(GrrArgument.FOLDER, question, var_name, must_exist=must_exist, must_not_exist=must_not_exist, default_string = default_folder, mode=interactive_mode)
+        self.steps.append(n)
 
 
     def add_multi_file_option(self, letter, word,  question, var_name, help, default_yn=DEFAULT_Y, must_exist=False, must_not_exist=False, ask_for_titles=False, interactive_mode=INTERACTIVE_ALWAYS):
@@ -101,17 +108,15 @@ class APIModule(object):
         else:
             self.subparser.add_argument("-"+letter, "--"+word, dest=var_name, metavar="<"+var_name+">", help=help,action='append', required=False)
 
-        if self.ask_interactively(interactive_mode, var_name):
-            n = InteractiveOption(InteractiveOption.MULTI_FILE, question, var_name, default_yn=default_yn, must_exist=must_exist, must_not_exist=must_not_exist, ask_for_titles=ask_for_titles)
-            self.steps.append(n)
+        n = GrrArgument(GrrArgument.MULTI_FILE, question, var_name, default_yn=default_yn, must_exist=must_exist, must_not_exist=must_not_exist, ask_for_titles=ask_for_titles, mode=interactive_mode)
+        self.steps.append(n)
 
 
     def add_text_option(self, letter, word, question, var_name, help, default_text=None, interactive_mode=INTERACTIVE_ALWAYS):
         self.subparser.add_argument("-"+letter, "--"+word, dest=var_name, metavar="<"+var_name+">",help=help, required=False)
 
-        if self.ask_interactively(interactive_mode, var_name):
-            n = InteractiveOption(InteractiveOption.TEXT, question, var_name, default_string=default_text)
-            self.steps.append(n)
+        n = GrrArgument(GrrArgument.TEXT, question, var_name, default_string=default_text, mode=interactive_mode)
+        self.steps.append(n)
 
 
 
@@ -120,9 +125,8 @@ class APIModule(object):
         self.subparser.add_argument("-" + letter, "--" + word, dest=var_name, metavar="<" + var_name + ">", help=help,
                                     action='append', required=False)
 
-        if self.ask_interactively(interactive_mode, var_name):
-            n = InteractiveOption(InteractiveOption.MULTI_TEXT, question, var_name, default_yn=default_yn)
-            self.steps.append(n)
+        n = GrrArgument(GrrArgument.MULTI_TEXT, question, var_name, default_yn=default_yn, mode=interactive_mode)
+        self.steps.append(n)
 
     def update_args(self, args):
         assert isinstance(args,dict)
@@ -130,95 +134,98 @@ class APIModule(object):
 
     def _populate(self):
 
+
         for l in self.steps:
 
-            assert isinstance(l, InteractiveOption)
+            assert isinstance(l, GrrArgument)
 
             # only process if args doesn't already have the key
             if l.var_name+"_global" not in self.args.keys():
 
-
-                ######## YN OPTION ###########
-                if l.type==InteractiveOption.YN:
-                    a = query_yes_no(l.question,l.default_yn)
-                    self.args[l.var_name] = a
+                if(l.ask_interactively(self.args)):
 
 
-
-                ######## YN FILE OPTION ###########
-                elif l.type==InteractiveOption.YN_FILE:
-                    if query_yes_no(l.question, l.default_yn):
-                        q = "Enter filename for "+l.question+": "
-                        print(q)
-                        f = capture_file(must_exist=True, must_be_file=True)
-                        self.args[l.var_name] = f
-                    else:
-                        self.args[l.var_name] = None
+                    ######## YN OPTION ###########
+                    if l.type==GrrArgument.YN:
+                        a = query_yes_no(l.question,l.default_yn)
+                        self.args[l.var_name] = a
 
 
 
-                ######## FILE OPTION ###########
-                elif l.type==InteractiveOption.FILE:
-                    question = "Enter a "+l.question
-                    print(question)
-                    f = capture_file(must_exist=l.must_exist, must_not_exist=l.must_not_exist, must_be_file=True, default=l.default_string)
-                    self.args[l.var_name] = f
-
-
-
-                ######## FOLDER OPTION ###########
-                elif l.type==InteractiveOption.FOLDER:
-                    question = "Enter a "+l.question
-                    print(question)
-                    f = capture_file(must_exist=l.must_exist, must_not_exist=l.must_not_exist, must_be_folder=True, default=l.default_string)
-                    self.args[l.var_name] = f
-
-
-
-                ######## MULTI FILE OPTION ###########
-                elif l.type==InteractiveOption.MULTI_FILE:
-                    q1 = "Add "+l.question+"?"
-                    a = query_yes_no(q1,l.default_yn)
-                    files = []
-                    while a:
-                        ff = capture_file(must_exist=l.must_exist, must_not_exist=l.must_not_exist, must_be_file=True)
-                        if l.ask_for_titles:
-                            t = capture_text("Enter a title for \""+str(ff)+"\"")
-                            fff = (ff,t)
-                            files.append(fff)
+                    ######## YN FILE OPTION ###########
+                    elif l.type==GrrArgument.YN_FILE:
+                        if query_yes_no(l.question, l.default_yn):
+                            q = "Enter filename for "+l.question+": "
+                            print(q)
+                            f = capture_file(must_exist=True, must_be_file=True)
+                            self.args[l.var_name] = f
                         else:
-                            files.append(ff)
-
-                        a = query_yes_no("Add another "+l.question+"?",default="No")
-                    self.args[l.var_name] = files
+                            self.args[l.var_name] = None
 
 
 
-                ######## TEXT OPTION ###########
-                elif l.type==InteractiveOption.TEXT:
-                    q = "Specify a value for "+l.question
-                    t = capture_text(q,l.default_string)
-                    self.args[l.var_name] = t
+                    ######## FILE OPTION ###########
+                    elif l.type==GrrArgument.FILE:
+                        question = "Enter a "+l.question
+                        print(question)
+                        f = capture_file(must_exist=l.must_exist, must_not_exist=l.must_not_exist, must_be_file=True, default=l.default_string)
+                        self.args[l.var_name] = f
+
+
+
+                    ######## FOLDER OPTION ###########
+                    elif l.type==GrrArgument.FOLDER:
+                        question = "Enter a "+l.question
+                        print(question)
+                        f = capture_file(must_exist=l.must_exist, must_not_exist=l.must_not_exist, must_be_folder=True, default=l.default_string)
+                        self.args[l.var_name] = f
+
+
+
+                    ######## MULTI FILE OPTION ###########
+                    elif l.type==GrrArgument.MULTI_FILE:
+                        q1 = "Add "+l.question+"?"
+                        a = query_yes_no(q1,l.default_yn)
+                        files = []
+                        while a:
+                            ff = capture_file(must_exist=l.must_exist, must_not_exist=l.must_not_exist, must_be_file=True)
+                            if l.ask_for_titles:
+                                t = capture_text("Enter a title for \""+str(ff)+"\"")
+                                fff = (ff,t)
+                                files.append(fff)
+                            else:
+                                files.append(ff)
+
+                            a = query_yes_no("Add another "+l.question+"?",default="No")
+                        self.args[l.var_name] = files
+
+
+
+                    ######## TEXT OPTION ###########
+                    elif l.type==GrrArgument.TEXT:
+                        q = "Specify a value for "+l.question
+                        t = capture_text(q,l.default_string)
+                        self.args[l.var_name] = t
 
 
 
 
 
 
-                ######## MULTI TEXT OPTION ###########
-                elif l.type == InteractiveOption.MULTI_TEXT:
-                    q1 = "Add " + l.question + "?"
-                    a = query_yes_no(q1, l.default_yn)
-                    texts = []
-                    while a:
-                        t = capture_text(q)
-                        texts.append(t)
+                    ######## MULTI TEXT OPTION ###########
+                    elif l.type == GrrArgument.MULTI_TEXT:
+                        q1 = "Add " + l.question + "?"
+                        a = query_yes_no(q1, l.default_yn)
+                        texts = []
+                        while a:
+                            t = capture_text(q)
+                            texts.append(t)
 
-                        a = query_yes_no("Add another "+l.question+"?",default="No")
-                    self.args[l.var_name] = texts
+                            a = query_yes_no("Add another "+l.question+"?",default="No")
+                        self.args[l.var_name] = texts
 
-                else:
-                    log("Invalid type specified in command line parser: "+ str(l.type),Logger.FATAL)
+                    else:
+                        log("Invalid type specified in command line parser: "+ str(l.type),Logger.FATAL)
 
 
 
@@ -288,18 +295,3 @@ class APIModule(object):
 
     def get_args(self):
         return self.args
-
-
-    def ask_interactively(self, interactive_mode, var_name):
-        if interactive_mode == self.INTERACTIVE_ALWAYS:
-            return True
-        if interactive_mode == self.INTERACTIVE_NEVER:
-            return False
-
-        if var_name in self.args and self.INTERACTIVE_IF_NOT_SPECIFIED:
-            return True
-
-        return False
-
-
-

@@ -1,7 +1,6 @@
 #!/usr/bin/python
 from grrargparse import APIModule, get_instance
 
-
 # define module
 class TestModule(APIModule):
 
@@ -52,30 +51,35 @@ class DummyModule(APIModule):
     help = "not necessary"
 
     def add_arguments(self):
-        """
-        no arguments to add
-        """
+        self.add_text_option('t', 'text', "Text Option",   "text", "Test Option", interactive_mode=APIModule.INTERACTIVE_IF_NOT_SPECIFIED)
+
 
     def do(self):
         print("dummmy module")
+        print ("The global var was: "+self.get_var('global_var'))
+        print ("The text option was: "+self.get_var('text'))
+        
 
 
 
 # instantiate the command line
-cmd = get_instance()
+c = get_instance()
+c.add_global_argument('-f',"--global", dest='global_var', help="Test Global arg", required=False)
 
 # optionally specify global arguments that are required
 #cmd.add_global_argument()
 
 # register the defined module
-cmd.register_module(TestModule)
-cmd.register_module(DummyModule)
+c.register_module(TestModule)
+c.register_module(DummyModule)
+
 
 # tells grrargparse to automatically run this module (either specify this or run_all...)
-#cmd.add_auto_module(TestModule)
+#c.add_auto_module(DummyModule)
 
 # tells grrargparse to run all modules regardless of what is specified
-cmd.run_all_modules()
+c.run_all_modules()
 
 # do nothing now as it will run automatically on exit.
 
+c.run()
