@@ -68,6 +68,31 @@ class APIModule(object):
     def preprocess(self):
         self.add_arguments()
 
+    def add_mutually_exclusive_group(required=False):
+        return self.subparser.add_mutually_exclusive_group(required=False)
+
+    def print_help():
+        return self.subparser.print_help()
+
+    def add_argument_group(title=None, description=None):
+        return self.subparser.add_argument_group(title=None, description=None)
+
+    def set_defaults(**kwargs):
+        return self.subparser.set_defaults(**kwargs)
+
+    def get_default(dest):
+        return self.subparser.get_default(dest)
+
+    def print_usage(file=None):
+        return self.subparser.print_usage(file=None)
+
+    def format_usage():
+        return self.subparser.format_usage()
+
+    def format_help():
+        return self.format_help()
+
+
     # only populate if variable hasn't already been set in constructor
     def add_yn_option(self, letter,word,question, var_name,help, default_yn=DEFAULT_Y, interactive_mode=INTERACTIVE_ALWAYS):
         if default_yn==self.DEFAULT_Y:
@@ -79,7 +104,7 @@ class APIModule(object):
         n = GrrArgument(GrrArgument.YN,question,var_name,default_yn = default_yn, mode=interactive_mode)
         self.steps.append(n)
 
-    def add_yn_file_option(self, letter,word,question, var_name, help, default_yn=DEFAULT_Y, default_file=None, interactive_mode=INTERACTIVE_ALWAYS):
+    def add_yn_file_option(self, letter,word,question, var_name, help, default_yn=DEFAULT_Y, default_file=None, interactive_mode=INTERACTIVE_ALWAYS, mutually_exclusive_with=None):
         self.subparser.add_argument("-"+letter, "--"+word, dest=var_name,metavar="<"+var_name+">",help=help,required=False)
 
         n = GrrArgument(GrrArgument.YN_FILE,question,var_name,default_yn = default_yn, default_string = default_file, mode=interactive_mode)

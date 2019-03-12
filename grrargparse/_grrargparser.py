@@ -89,7 +89,7 @@ class grrargparse(object):
             assert isinstance(module,APIModule)
 
             # run 1 module specified by cmd or All modules or any auto module
-            if self._run_all_modules or module in self._auto_modules or ("cmd" in self.args and self.args["cmd"] == module_name):
+            if self._run_all_modules or module in self._auto_modules or ("cmd" in self.args and self.args["cmd"] == module.name):
                 module.update_args(self.args)
                 module.proc()
 
