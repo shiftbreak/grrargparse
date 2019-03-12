@@ -41,6 +41,7 @@ class GrrArgument(object):
         return False
 
 
+
 class APIModule(object):
 
     DEFAULT_Y = "Yes"
@@ -58,7 +59,7 @@ class APIModule(object):
         self.help = ""
         self.args = {}
         self.subparser = subparser.add_parser(self.name,help=self.help)
-
+        
         if args is not None:
             self.update_args(args)
 
@@ -67,30 +68,6 @@ class APIModule(object):
 
     def preprocess(self):
         self.add_arguments()
-
-    def add_mutually_exclusive_group(required=False):
-        return self.subparser.add_mutually_exclusive_group(required=False)
-
-    def print_help():
-        return self.subparser.print_help()
-
-    def add_argument_group(title=None, description=None):
-        return self.subparser.add_argument_group(title=None, description=None)
-
-    def set_defaults(**kwargs):
-        return self.subparser.set_defaults(**kwargs)
-
-    def get_default(dest):
-        return self.subparser.get_default(dest)
-
-    def print_usage(file=None):
-        return self.subparser.print_usage(file=None)
-
-    def format_usage():
-        return self.subparser.format_usage()
-
-    def format_help():
-        return self.format_help()
 
 
     # only populate if variable hasn't already been set in constructor
