@@ -90,14 +90,14 @@ class APIModule(object):
 
     def add_single_file_option(self, letter, word, question, var_name, help, must_exist=False, must_not_exist=False, default_file=None, interactive_mode=INTERACTIVE_ALWAYS):
 
-        self.subparser.add_argument("-"+letter, "--"+word, dest=var_name,help=help,required=False)
+        self.subparser.add_argument("-"+letter, "--"+word, dest=var_name,help=help,required=False, defualt=default_file)
 
         n = GrrArgument(GrrArgument.FILE,question,var_name,must_exist=must_exist,must_not_exist=must_not_exist, default_string = default_file, mode=interactive_mode)
         self.steps.append(n)
 
 
     def add_folder_option(self, letter, word, question, var_name, help, must_exist=False, must_not_exist=False, default_folder=None, interactive_mode=INTERACTIVE_ALWAYS):
-        self.subparser.add_argument("-"+letter, "--"+word, dest=var_name,help=help, required=False)
+        self.subparser.add_argument("-"+letter, "--"+word, dest=var_name,help=help, required=False, default=default_folder)
 
         n = GrrArgument(GrrArgument.FOLDER, question, var_name, must_exist=must_exist, must_not_exist=must_not_exist, default_string = default_folder, mode=interactive_mode)
         self.steps.append(n)
@@ -115,7 +115,7 @@ class APIModule(object):
 
 
     def add_text_option(self, letter, word, question, var_name, help, default_text=None, interactive_mode=INTERACTIVE_ALWAYS):
-        self.subparser.add_argument("-"+letter, "--"+word, dest=var_name, metavar="<"+var_name+">",help=help, required=False)
+        self.subparser.add_argument("-"+letter, "--"+word, dest=var_name, metavar="<"+var_name+">",help=help, required=False, default=default_text)
 
         n = GrrArgument(GrrArgument.TEXT, question, var_name, default_string=default_text, mode=interactive_mode)
         self.steps.append(n)
@@ -228,6 +228,9 @@ class APIModule(object):
 
                     else:
                         log("Invalid type specified in command line parser: "+ str(l.type),Logger.FATAL)
+            else if l.default_string is not None and l.default_string != "None":
+                # Process default args that are not asked for interactively (APIModule.INTERACTIVE_NEVER)
+                self.args[l.var_name] = l.default_string
 
 
 
